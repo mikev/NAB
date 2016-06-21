@@ -1,40 +1,97 @@
-
 The Numenta Anomaly Benchmark [![Build Status](https://travis-ci.org/numenta/NAB.svg?branch=master)](https://travis-ci.org/numenta/NAB)
 -----------------------------
 
-Welcome. This repository contains the data and scripts necessary to replicate the results in the forthcoming Numenta Anomaly Benchmark (NAB) conference publication. Also provided are the tools to run NAB scoring on your own anomaly detection algorithms; see the [NAB entry points info](https://github.com/numenta/NAB/wiki#nab-entry-points). Competitive results tied to open source code will be posted in the wiki on the [Scoreboard](https://github.com/numenta/NAB/wiki#nab-scoreboard). Let us know about your work by submitting a pull request. 
+Welcome. This repository contains the data and scripts comprising the Numenta
+Anomaly Benchmark (NAB). NAB is a novel benchmark for evaluating
+algorithms for anomaly detection in streaming, real-time applications. It is
+comprised of over 50 labeled real-world and artificial timeseries data files plus a
+novel scoring mechanism designed for real-time applications.
 
-This readme is a brief overview and contains details for setting up NAB. **Please refer to the [NAB Whitepaper](https://github.com/numenta/NAB/wiki#nab-whitepaper) in the wiki for more details about NAB scoring, data, motivation, etc.**
+Included are the tools to allow you to easily run NAB on your
+own anomaly detection algorithms; see the [NAB entry points
+info](https://github.com/numenta/NAB/wiki#nab-entry-points). Competitive results
+tied to open source code will be posted in the wiki on the
+[Scoreboard](https://github.com/numenta/NAB/wiki/NAB%20Scoreboard). Let us know
+about your work by emailing us at [nab@numenta.org](mailto:nab@numenta.org) or
+submitting a pull request.
+
+This readme is a brief overview and contains details for setting up NAB. Please
+refer to the [NAB publication](http://arxiv.org/abs/1510.03336) or the [NAB
+Whitepaper](https://github.com/numenta/NAB/wiki#nab-whitepaper) in the wiki for
+more details about NAB scoring, data, motivation, etc.
+
+We encourage you to publish your results on running NAB, and share them with us at [nab@numenta.org](nab@numenta.org). Please cite the following publication when referring to NAB:
+
+Lavin, Alexander and Ahmad, Subutai. *"Evaluating Real-time Anomaly Detection
+Algorithms – the Numenta Anomaly Benchmark"*, Fourteenth International
+Conference on Machine Learning and Applications, December 2015.
+[[PDF]](http://arxiv.org/abs/1510.03336)
+
+#### Scoreboard
+
+The NAB scores are normalized such that the maximum possible is 100.0 (i.e. the perfect detector), and a baseline of 0.0 is determined by the "null" detector (which makes no detections).
+
+| Detector      | Standard Profile | Reward Low FP | Reward Low FN |
+|---------------|------------------|---------------|---------------|
+| Perfect       | 100.0            | 100.0         | 100.0         |
+| [Numenta HTM](https://github.com/numenta/nupic)* | 65.3          | 58.6          | 69.4          |
+| [Twitter ADVec v1.0.0](https://github.com/twitter/AnomalyDetection)| 47.1             | 33.6          | 53.5          |
+| [Etsy Skyline](https://github.com/etsy/skyline) | 35.7             | 27.1          | 44.5          |
+| Bayesian Changepoint**          | 17.7              | 3.2           | 32.2           |
+| [Sliding Threshold](https://github.com/numenta/NAB/blob/master/nab/detectors/gaussian/windowedGaussian_detector.py) | 15.0             | -26.2          | 30.1          |
+| Random***       | 11.0             | 1.2          | 19.5          |
+| Null          | 0.0              | 0.0           | 0.0           |
+
+*As of NAB v1.0*
+
+\* The results correspond to NuPIC and nupic.core SHAs 42f701d and c030b84 respectively, but the latest version of NuPIC should still work (the results may not be identical).
+
+** The original algorithm was not designed for anomaly detection. Details of the implementation and parameter tuning are in the [detector's code](https://github.com/numenta/NAB/blob/master/nab/detectors/bayes_changept/bayes_changept_detector.py).
+
+*** Scores reflect the mean across a range of random seeds. The spread of scores for each profile are 7.95 to 16.83 for Standard, -1.56 to 2.14 for Reward Low FP, and 11.34 to 23.68 for Reward Low FN.
+
+Please see [the wiki section on contributing algorithms](https://github.com/numenta/NAB/wiki/NAB-Contributions-Criteria#anomaly-detection-algorithms) for discussion on posting algorithms to the scoreboard.
 
 #### Corpus
 
-The NAB corpus of timeseries data files is designed to provide data for research
-in streaming anomaly detection. It is comprised of both artificial and
-real-world timeseries data containing labeled anomalous periods of behavior.
+The NAB corpus of 58 timeseries data files is designed to provide data for research
+in streaming anomaly detection. It is comprised of both
+real-world and artifical timeseries data containing labeled anomalous periods of behavior.
 
-All data are ordered, timestamped, single-valued metrics collected at 5-minute intervals.
+The majority of the data is real-world from a variety of sources such as AWS
+server metrics, Twitter volume, advertisement clicking metrics, traffic data,
+and more. All data is included in the repository, with more details in the [data
+readme](https://github.com/numenta/NAB/tree/master/data). We are in the process
+of adding more data, and actively searching for more data. Please contact us at
+[nab@numenta.org](mailto:nab@numenta.org) if you have similar data (ideally with
+known anomalies) that you would like to see incorporated into NAB.
 
-Much of the real-world data are values from AWS server metrics as collected by 
-the [AmazonCloudwatch service](https://aws.amazon
-.com/documentation/cloudwatch/). Example
-metrics include CPU Utilization, Network Bytes In, and Disk Read Bytes. There
-are also real world sensor readings from some large machines. 
+The NAB version will be updated whenever new data (and corresponding labels) is
+added to the corpus; NAB is currently in v1.0.
 
-All data is included in the repository. We are in the process of adding more data, and actively searching for more data. The NAB version will be updated whenever new data is added to the corpus; NAB is currently in v0.8.
+#### Additional Scores
 
-#### Task
+For comparison, here are the NAB V1.0 scores for some additional flavors of HTM.
+NumentaTM HTM detector uses the implementation of temporal memory found
+[here](https://github.com/numenta/nupic.core/blob/master/src/nupic/algorithms/TemporalMemory.hpp).
+Numenta HTM detector with no likelihood uses the raw anomaly scores directly. To
+run without likelihood, set the variable `self.useLikelihood` in
+[numenta_detector.py](https://github.com/numenta/NAB/blob/master/nab/detectors/numenta/numenta_detector.py)
+to `False`.
 
-Detect anomalous behavior in *streaming data in real-time* and provide *useful* alerts.
 
-Your anomaly detector must be able to handle streaming data. Post-hoc analysis is insufficient for this task. All classifications must
-be done as if the data is being presented for the first time, in real time. Anomalies must be detected within a reasonable amount of time.
+| Detector      |Standard Profile | Reward Low FP | Reward Low FN |
+|---------------|---------|------------------|---------------|---------------|
+| Numenta HTM*   | 65.3             | 58.6       | 69.4          |
+| [NumentaTM HTM](https://github.com/numenta/NAB/blob/master/nab/detectors/numenta/numentaTM_detector.py)* | 61.2             | 52.4       | 66.1          |
+| Numenta HTM*, no likelihood | 52.52 | 41.09    | 58.25         |
 
-This benchmark is representative of a task in human time-scales. Per-record classification should take place in less than 5 minutes. Anomaly detection should happen as quickly as possible following the onset of an anomaly.
+\* The results correspond to NuPIC and nupic.core SHAs 42f701d and c030b84
+respectively, but the latest version of NuPIC should still work (the results may
+not be identical).
 
-It is insufficient to just catch all anomalies. A detector with a high false positive rate is of little use. I.e. many false positives will reduce or eliminate an institution's willingness to use your technique; you must minimize the cost of using your detection technique.
-
-Installing NAB 0.8
---------------
+Installing NAB 1.0
+------------------
 
 ### Supported Platforms
 
@@ -55,8 +112,7 @@ You need to manually install the following:
 
 ##### Download this repository
 
-    cd ~/
-    git clone https://github.com/numenta/NAB.git
+Use the Github links provided in the right sidebar.
 
 ##### Install the Python requirements
 
@@ -67,67 +123,82 @@ This will install the additional required modules pandas and simplejson.
 
 ##### Install NAB
 
-	(sudo) python setup.py develop
+Recommended:
 
-Or with manual PYTHONPATH setup, rather than sudo:
+	python setup.py install --user
+
+Or if you are actively working on the code and are familiar with manual
+PYTHONPATH setup:
 
 	python setup.py develop --prefix=/some/other/path/
 
 ### Usage
 
-##### Run NAB
+There are several different use cases for NAB:
+
+1. If you just want to look at all
+the results we reported in the paper, there is no need to run anything.
+All the data files are in the data subdirectory and all individual detections
+for reported algorithms are checked in to the results subdirectory. Please see
+the README files in those locations.
+
+1. If you have your own algorithm and want to run the NAB benchmark, please see
+the [NAB Entry Points](https://github.com/numenta/NAB/wiki#nab-entry-diagram)
+section in the wiki. (The easiest option is often to simply run your algorithm
+on the data and output results in the CSV format we specify. Then run the NAB
+scoring algorithm to compute the final scores. This is how we scored the Twitter
+algorithm, which is written in R.)
+
+1. If you are a NuPIC user and just want to run the Numenta HTM detector follow
+the directions below to "Run HTM with NAB".
+
+1. If you want to run everything including the bundled Skyline detector follow
+the directions below to "Run full NAB". Note that this will take hours as the
+Skyline code is quite slow.
+
+
+##### Run HTM with NAB
+
+First make sure NuPIC is installed and working properly. Then:
+
+    cd /path/to/nab
+    python run.py -d numenta --detect --score --normalize
+
+This will run the Numenta detector only and produce normalized scores. Note that
+by default it tries to use all the cores on your machine. The above command
+should take about 20-30 minutes on a current powerful laptop with 4-8 cores.
+For debugging you can run subsets of the data files by modifying and specifying
+specific label files. Please type:
+
+    python run.py --help
+
+to see all the options.
+
+Note that to replicate results exactly as in the paper you may need to checkout
+the specific version of NuPIC (and associated nupic.core) that is noted in the
+[Scoreboard](https://github.com/numenta/NAB/wiki/NAB%20Scoreboard):
+
+    cd /path/to/nupic/
+    git checkout -b nab {TAG NAME}
+    cd /path/to/nupic.core/
+    git checkout -b nab {TAG NAME}
+
+
+##### Run full NAB
 
     cd /path/to/nab
     python run.py
 
-This will produce results files for the anomaly detection methods. Included in the repo are the Numenta anomaly detection method, as well as methods from the [Etsy Skyline](https://github.com/etsy/skyline) anomaly detection library, a random detector, and a baseline detector. This will also pass those results files to the scoring script to generate final NAB scores.
+This will run everything and produce results files for the anomaly detection
+methods. Included in the repo are the Numenta anomaly detection method, as well
+as methods from the [Etsy Skyline](https://github.com/etsy/skyline) anomaly
+detection library, a random detector, and a null detector. This will also pass
+those results files to the scoring script to generate final NAB scores.
+**Note**: this option will take many many hours to run.
 
-For details on how to run your own detector please see the [NAB Entry Points diagram](https://github.com/numenta/NAB/wiki#nab-entry-diagram) in the wiki.
-
-To view a description of the command line options please enter
+The run.py command has a number of useful options. To view a description of the
+command line options please enter
 
 	python run.py --help 
 
-Once NAB is finalized (not yet!) to replicate results exactly you will need a specific version of NuPIC:
-    
-    cd /path/to/nupic/
-    git checkout -b nab {TAG NAME}
 
-Then follow build directions in the [NuPIC "README.md"](https://github.com/numenta/nupic/blob/master/README.md).
-
-#### Data
-
-##### Data and results files
-
-This repo contains a corpus of 32 data files of time-series data. The format of the CSV files is specified in Appendix F of the [NAB Whitepaper](https://github.com/numenta/NAB/wiki#nab-whitepaper). The detector under test will read in, and be scored on, all data files in the corpus. The format of results files is also specified in the whitepaper posted in the wiki.
-
-##### Data and results visualization
-
-There is currently a simple data visualizer available, useful in hand labeling datasets. To use it do the following:
-
-First generate the list of data files and result files:
-
-    ls -1 */*/*.csv | grep data > data_file_paths.txt 
-    ls -1 */*/*/*.csv | grep results | grep -v test_results > results_file_paths.txt
-
-From the NAB directory, type:
-
-    python -m SimpleHTTPServer 12345
- 
-Then, open Chrome and type this into the url window:
- 
-    localhost:12345/nab_visualizer.html
- 
-To view data, click on "look at data", click in query window and press RETURN key. This should show all the data files. You can also filter the files by keyword with the query window; it will filter for filenames that contain the entered characters.
-
-To get a string of the timestamp at a data point, simply click on the data point.
-
-To zoom in on a region of data, drag the cursor to highlight the section of interest. To zoom back out, double-click the screen.
-
-To view result files, click on "look at results" first.
-
-There is a plotting script available in the scripts directory, which will generate plots via the [plotly API](https://plot.ly/); requires a (free) API key. To generate examples, run from the NAB directory:
-
-	python scripts/plot.py
-
-Modify the script to plot specific NAB data and/or results files.

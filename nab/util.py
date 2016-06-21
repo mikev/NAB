@@ -20,6 +20,7 @@
 
 import datetime
 import dateutil
+import math
 import os
 import pandas
 import pprint
@@ -29,6 +30,14 @@ try:
   import simplejson as json
 except ImportError:
   import json
+
+
+
+def getProbationPeriod(probationPercent, fileLength):
+  """Return the probationary period index."""
+  return min(
+    math.floor(probationPercent * fileLength),
+    probationPercent * 5000)
 
 
 def getOldDict(filePath):
@@ -66,16 +75,14 @@ def updateFinalResults(newResults, resultsFilePath):
 
   @return oldResults        (dict)    Updated final results.
   """
-  oldResults = getOldDict(resultsFilePath)
+  results = getOldDict(resultsFilePath)
 
-  # dut: detector under test
-  for dut, score in newResults.iteritems():
-    if dut not in oldResults:
-      oldResults[dut] = score
+  for detector, score in newResults.iteritems():
+    results[detector] = score
 
-  writeJSON(resultsFilePath, oldResults)
+  writeJSON(resultsFilePath, results)
 
-  return oldResults
+  return results
 
 
 def updateThresholds(newThresholds, thresholdsFilePath):
@@ -243,7 +250,7 @@ def convertResultsPathToDataPath(path):
 
   @return     (string)  Path to dataset result in the result directory.
   """
-  path = path.split("/")
+  path = path.split(os.path.sep)
   detector = path[0]
   path = path[1:]
 

@@ -29,13 +29,6 @@ except ImportError:
 from nab.runner import Runner
 from nab.util import (detectorNameToClass, checkInputs)
 
-# The following imports are necessary for getDetectorClassConstructors to
-# automatically figure out the detector classes
-from nab.detectors.numenta.numenta_detector import NumentaDetector
-from nab.detectors.skyline.skyline_detector import SkylineDetector
-from nab.detectors.random.random_detector import RandomDetector
-from nab.detectors.baseline.baseline_detector import BaselineDetector
-
 
 
 def getDetectorClassConstructors(detectors):
@@ -51,7 +44,7 @@ def getDetectorClassConstructors(detectors):
 
 
 def main(args):
-  
+
   root = os.path.dirname(os.path.realpath(__file__))
 
   numCPUs = int(args.numCPUs) if args.numCPUs is not None else None
@@ -61,7 +54,7 @@ def main(args):
   resultsDir = os.path.join(root, args.resultsDir)
   profilesFile = os.path.join(root, args.profilesFile)
   thresholdsFile = os.path.join(root, args.thresholdsFile)
-  
+
   runner = Runner(dataDir=dataDir,
                   labelPath=windowsFile,
                   resultsDir=resultsDir,
@@ -116,7 +109,7 @@ if __name__ == "__main__":
                     help="Normalize the final scores",
                     default=False,
                     action="store_true")
-                    
+
   parser.add_argument("--skipConfirmation",
                     help="If specified will skip the user confirmation step",
                     default=False,
@@ -135,21 +128,22 @@ if __name__ == "__main__":
                     default=os.path.join("labels", "combined_windows.json"),
                     help="JSON file containing ground truth labels for the "
                          "corpus.")
-                         
+
   parser.add_argument("-d", "--detectors",
                     nargs="*",
                     type=str,
-                    default=["baseline", "numenta", "random", "skyline"],
+                    default=["null", "numenta", "random", "skyline",
+                             "bayesChangePt", "windowedGaussian"],
                     help="Comma separated list of detector(s) to use, e.g. "
-                         "baseline,numenta")
-                    
+                         "null,numenta")
+
   parser.add_argument("-p", "--profilesFile",
-                    default="config/profiles.json",
+                    default=os.path.join("config", "profiles.json"),
                     help="The configuration file to use while running the "
                     "benchmark.")
 
   parser.add_argument("-t", "--thresholdsFile",
-                    default="config/thresholds.json",
+                    default=os.path.join("config", "thresholds.json"),
                     help="The configuration file that stores thresholds for "
                     "each combination of detector and username")
 
@@ -159,7 +153,7 @@ if __name__ == "__main__":
                     "benchmark. If not specified all CPUs will be used.")
 
   args = parser.parse_args()
-  
+
   if (not args.detect
       and not args.optimize
       and not args.score
@@ -171,8 +165,27 @@ if __name__ == "__main__":
 
   if len(args.detectors) == 1:
     # Handle comma-seperated list argument.
-    args.detectors = args.detectors[0].split(',')
+    args.detectors = args.detectors[0].split(",")
+
+  # The following imports are necessary for getDetectorClassConstructors to
+  # automatically figure out the detector classes.
+  # Only import detectors if used so as to avoid unnecessary dependency.
+  if "bayesChangePt" in args.detectors:
+    from nab.detectors.bayes_changept.bayes_changept_detector import (
+      BayesChangePtDetector)
+  if "numenta" in args.detectors:
+    from nab.detectors.numenta.numenta_detector import NumentaDetector
+  if "numentaTM" in args.detectors:
+    from nab.detectors.numenta.numentaTM_detector import NumentaTMDetector
+  if "null" in args.detectors:
+    from nab.detectors.null.null_detector import NullDetector
+  if "random" in args.detectors:
+    from nab.detectors.random.random_detector import RandomDetector
+  if "skyline" in args.detectors:
+    from nab.detectors.skyline.skyline_detector import SkylineDetector
+  if "windowedGaussian" in args.detectors:
+    from nab.detectors.gaussian.windowedGaussian_detector import (
+      WindowedGaussianDetector)
 
   if args.skipConfirmation or checkInputs(args):
     main(args)
-    
